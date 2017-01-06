@@ -3,45 +3,86 @@
 
 class Entidad {
 public:
+	/* Constructor */
 	Entidad();
+
+	/* Destructor */
 	~Entidad();
 
-
-	/// <summary>
-	/// Devuelve el ancho del sprite
-	/// </summary>
+	/*
+	Devuelve el ancho de la entidad, o NULL si no
+	se ha modificado o es un valor incorrecto.*/
 	int getWidth();
 
-	/// <summary>
-	/// Devuelve el alto del sprite
-	/// </summary>
+	/*
+	Devuelve el alto de la entidad, o NULL si no
+	se ha modificado o es un valor incorrecto.*/
 	int getHeight();
 
+	/*
+	Devuelve la posición de la entidad como vector de dos componentes flotantes.*/
 	sf::Vector2f getPosition();
+
+	/*
+	Devuelve la textura de la entidad.*/
 	sf::Texture getTexture();
+
+	/*
+	Devuelve el Sprite de la entidad.*/
 	sf::Sprite getSprite();
 
 	// Setter
+
+	/*
+	Se establece el ancho de la entidad con el parámetro width pasado.*/
 	void setWidth(int width);
+
+	/*
+	Se establece el alto de la entidad con el parámetro height pasado.*/
 	void setHeight(int height);
 
-	void setPosition(sf::Vector2f);
+	/*
+	Se cambia la posición de la entidad utilizando un vector de dos componentes flotantes.*/
+	void setPosition(sf::Vector2f posicion);
+
+	/*
+	Se cambia la posición de la entidad utilizando las dos coordenadas pasadas por parámetros.*/
 	void setPosition(float x, float y);
 
-	void setTexture(sf::Texture texture);
+	/*
+	Se cambia la textura de la entidad por una nueva.*/
+	void setTexture(sf::Texture &texture);
+
+	/*
+	Se cambia el Sprite de la entidad por uno nuevo.*/
 	void setSprite(sf::Sprite sprite);
 
-	void act(float deltaTime);
-	void draw(sf::RenderWindow window);
+	/*
+	Método que se utiliza para escribir toda la lógica de la entidad.
+	- deltaTime: tiempo que transcurre entre cada iteración del bucle principal del juego*/
+	virtual void act(float deltaTime);
+
+	/*
+	Método que se encarga de dibujar los cambios en la pantalla.
+	- window: Ventana en la que se van a aplicar los cambios.*/
+	virtual void draw(sf::RenderWindow window);
 
 
-private:
+protected:
 
-	int width = NULL;
-	int height = NULL;
+	/* Ancho de la entidad. Tiene valor NULL por defecto.*/
+	int _width = NULL;
 
-	sf::Vector2f position;
+	/* Alto de la entidad. Tiene valor NULL por defecto.*/
+	int _height = NULL;
+
+	/* Vector de 2 componentes flotantes que almacena la posición de la entidad.*/
+	sf::Vector2f _position;
+
+	/* Textura de la entidad*/
 	sf::Texture _texture;
+
+	/* Sprite de la entidad. Es la parte visible que se va a mostrar por pantalla.*/
 	sf::Sprite _sprite;
 
 };

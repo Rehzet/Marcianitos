@@ -1,16 +1,15 @@
 #include "Disparo.h"
 
-Disparo::Disparo(float x, float y){
+Disparo::Disparo(){
 	_sprite.setTexture(*TextureManager::getTexture("disparo"));
-	this->_sprite.setPosition(x, y);
 }
 
 void Disparo::mover(float deltaTime) {
 	_sprite.move(0, -1200 * deltaTime);
 }
 
-sf::Sprite Disparo::getSprite() {
-	return _sprite;
+void Disparo::draw(sf::RenderWindow &window) {
+	window.draw(_sprite);
 }
 
 Disparo::~Disparo() {

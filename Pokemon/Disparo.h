@@ -5,19 +5,16 @@
 #include <vector>
 #include <memory>
 #include "TextureManager.h"
+#include "Entidad.h"
 
-class Disparo {
+class Disparo : public Entidad{
 public:
-	Disparo(float x, float y);
+
+	Disparo();
 	~Disparo();
 
+	void draw(sf::RenderWindow &Window);
 	void mover(float deltaTime);
-	sf::Sprite getSprite();
 
-private:
-	sf::Sprite _sprite;
-
-	float _x;
-	float _y;
 };
 

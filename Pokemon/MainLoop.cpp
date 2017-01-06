@@ -4,13 +4,14 @@
 #include "Nave.h"
 #include "Constantes.h"
 #include "TextureManager.h"
+#include "Entidad.h"
 
 void inicializar();
 void gameLoop();
 void inputProcessor();
 
- sf::VideoMode resolucion = _1920x1080;
- sf::Uint32 modoVentana = sf::Style::Fullscreen;
+ sf::VideoMode resolucion = _1280x768;
+ sf::Uint32 modoVentana = sf::Style::Default;
 
  sf::RenderWindow GameWindow;
 
@@ -25,7 +26,7 @@ void inputProcessor();
 
  sf::Texture tempTextur;
 
- Nave nave(resolucion);
+ Nave *nave = new Nave(resolucion);
 
  sf::Event Event;
 
@@ -58,12 +59,15 @@ void inicializar() {
 
 	/* ----- NAVE ----- */
 	TextureManager::loadTexture("nave", "res/PNG/playerShip2_red.png");
-	nave.setTexture(*TextureManager::getTexture("nave"));
-	nave.setRightLimit(resolucion.width);
+	nave->setTexture(*TextureManager::getTexture("nave"));
+	nave->setRightLimit(resolucion.width);
 
 	/* ----- DISPARO-NAVE ----- */
 	TextureManager::loadTexture("disparo", "res/PNG/Lasers/laserBlue01.png");
 	
+	/* ----- FUEGOS-NAVE ----- */
+	
+
 	/* ----- TIPO DE LETRA ----- */
 	if (!fuenteKenVector_Future.loadFromFile("res/Bonus/kenvector_future.ttf"))
 		std::cout << "No se ha podido cargar la fuente" << std::endl;
@@ -79,39 +83,26 @@ void inicializar() {
 
 	
 }
-bool a = true;
 
 void gameLoop() {while (GameWindow.isOpen()){ // Bucle principal del juego
 	deltaTime = Reloj.restart();
 
 	inputProcessor();
-	nave.processInput(deltaTime.asSeconds());
-	
-
-	if (nave.getPosition().x <= 10) {
-		Reloj2.restart();
-		a = true;
-	}
-	
-	if (nave.getPosition().x + 112 >= (int)GameWindow.getSize().x-10 && a) {
-		std::cout << Reloj2.getElapsedTime().asSeconds() << std::endl;
-		a = false;
-	}
+	nave->processInput(deltaTime.asSeconds());
 
 	GameWindow.clear(sf::Color::Black);
 
 	GameWindow.draw(fondo);
 	GameWindow.draw(txtPuntos);
 
-	nave.draw(GameWindow, deltaTime.asSeconds());
+	nave->draw(GameWindow);
 
-	for (int i = 0; i < (int)nave.vectorDisparos.size(); i++) 
-		GameWindow.draw(nave.vectorDisparos[i].getSprite());
+	for (int i = 0; i < (int)nave->vectorDisparos.size(); i++)
+		nave->vectorDisparos[i].draw(GameWindow);
 	
-	for (int i = 0; i < (int)nave.vectorDisparos.size(); i++)
-		nave.vectorDisparos[i].mover(deltaTime.asSeconds());
-	
-	
+	for (int i = 0; i < (int)nave->vectorDisparos.size(); i++)
+		nave->vectorDisparos[i].mover(deltaTime.asSeconds());
+
 	GameWindow.display();
 
 }}
@@ -132,8 +123,8 @@ void inputProcessor() {	static bool moverDcha = false;	static bool moverIzda = f
 		break;
 	case sf::Event::Resized:
 		GameWindow.create(sf::VideoMode(GameWindow.getSize().x, GameWindow.getSize().y, 32), "Marcianitos", modoVentana);
-		nave.setPosition((float)GameWindow.getSize().x / 2 - 56, (float)GameWindow.getSize().y - 100);
-		nave.setRightLimit(GameWindow.getSize().x);
+		nave->setPosition((float)GameWindow.getSize().x / 2 - 56, (float)GameWindow.getSize().y - 100);
+		nave->setRightLimit(GameWindow.getSize().x);
 		fondo.setTextureRect({ 0, 0, (int)GameWindow.getSize().x * 2, (int)GameWindow.getSize().y * 2 });
 		break;
 	}
@@ -159,9 +150,9 @@ void inputProcessor() {	static bool moverDcha = false;	static bool moverIzda = f
 	}
 
 	if (moverDcha)
-		nave.mover(1, 0, deltaTime.asSeconds());
+		nave->mover(1, 0, deltaTime.asSeconds());
 	if (moverIzda)
-		nave.mover(-1, 0, deltaTime.asSeconds());
+		nave->mover(-1, 0, deltaTime.asSeconds());
 
 	
 	
