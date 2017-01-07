@@ -12,6 +12,14 @@ void Disparo::draw(sf::RenderWindow &window) {
 	window.draw(_sprite);
 }
 
+bool Disparo::isAlive() {
+	return _alive;
+}
+
+void Disparo::setAlive(bool alive) {
+	_alive = alive;
+}
+
 Disparo::~Disparo() {
 
 }

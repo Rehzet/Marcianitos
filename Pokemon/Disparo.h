@@ -16,5 +16,10 @@ public:
 	void draw(sf::RenderWindow &Window);
 	void mover(float deltaTime);
 
+	bool isAlive();
+	void setAlive(bool alive);
+
+private:
+	bool _alive = true;
 };
 

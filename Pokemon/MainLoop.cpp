@@ -5,6 +5,7 @@
 #include "Constantes.h"
 #include "TextureManager.h"
 #include "Entidad.h"
+#include "Enemigo.h"
 
 void inicializar();
 void gameLoop();
@@ -23,10 +24,13 @@ void inputProcessor();
 
  sf::Font fuenteKenVector_Future;
  sf::Text txtPuntos;
+ int puntos = 0;
 
  sf::Texture tempTextur;
 
  Nave *nave = new Nave(resolucion);
+
+ std::vector<Enemigo> enemigos;
 
  sf::Event Event;
 
@@ -66,6 +70,18 @@ void inicializar() {
 	TextureManager::loadTexture("disparo", "res/PNG/Lasers/laserBlue01.png");
 	
 	/* ----- FUEGOS-NAVE ----- */
+
+	/* ----- ENEMIGOS ----- */
+	int x = 100;
+
+	for (int i = 0; i < 5; i++) {
+		Enemigo *enemigo = new Enemigo();
+		TextureManager::loadTexture("enemigo", "res/PNG/Enemies/enemyBlack1.png");
+		enemigo->setTexture(*TextureManager::getTexture("enemigo"));
+		enemigo->setPosition(x, 100);
+		x += 200;
+		enemigos.push_back(*enemigo);
+	}
 	
 
 	/* ----- TIPO DE LETRA ----- */
@@ -73,12 +89,10 @@ void inicializar() {
 		std::cout << "No se ha podido cargar la fuente" << std::endl;
 
 	txtPuntos.setFont(fuenteKenVector_Future);
-	txtPuntos.setString("Puntuación: 0");
+	txtPuntos.setString("Puntuación: " + std::to_string(puntos));
 	txtPuntos.setCharacterSize(20);
 	txtPuntos.setPosition(10, 10);
 
-
-	
 	GameWindow.pollEvent(Event);
 
 	
@@ -90,6 +104,25 @@ void gameLoop() {while (GameWindow.isOpen()){ // Bucle principal del juego
 	inputProcessor();
 	nave->processInput(deltaTime.asSeconds());
 
+	for (int i = 0; i < (int)nave->vectorDisparos.size(); i++)
+		nave->vectorDisparos[i].mover(deltaTime.asSeconds());
+
+	
+		for (int j = 0; j < 5; j++) {
+			for (int i = 0; i < (int)nave->vectorDisparos.size(); i++) {
+				if (nave->vectorDisparos[i].getSprite().getGlobalBounds().intersects(enemigos[j].getSprite().getGlobalBounds())) {
+					enemigos[j].setAlive(false);
+					enemigos[j].setPosition(-1000, -1000);
+					nave->vectorDisparos[i].setAlive(false);
+					nave->vectorDisparos[i].setPosition(-2000, -1000);
+					txtPuntos.setString("Puntuación: " + std::to_string(puntos+=100));
+					std::cout << "Colision" << std::endl;
+				}
+			}		
+		}
+	
+	
+
 	GameWindow.clear(sf::Color::Black);
 
 	GameWindow.draw(fondo);
@@ -98,12 +131,17 @@ void gameLoop() {while (GameWindow.isOpen()){ // Bucle principal del juego
 	nave->draw(GameWindow);
 
 	for (int i = 0; i < (int)nave->vectorDisparos.size(); i++)
-		nave->vectorDisparos[i].draw(GameWindow);
-	
-	for (int i = 0; i < (int)nave->vectorDisparos.size(); i++)
-		nave->vectorDisparos[i].mover(deltaTime.asSeconds());
+		if(nave->vectorDisparos[i].isAlive())
+			nave->vectorDisparos[i].draw(GameWindow);
+
+	for (int j = 0; j < 5; j++) {
+		if (enemigos[j].isAlive())
+			enemigos[j].draw(GameWindow);
+	}
 
 	GameWindow.display();
+
+	
 
 }}
 
