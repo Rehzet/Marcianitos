@@ -11,7 +11,11 @@ public:
 	bool isAlive();
 	void setAlive(bool alive);
 
+	int getID();
+	void setID(int ID);
+
 private:
 	bool _alive = true;
+	int _ID;
 };
 

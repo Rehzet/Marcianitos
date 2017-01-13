@@ -16,6 +16,14 @@ void Enemigo::setAlive(bool alive) {
 	_alive = alive;
 }
 
+int Enemigo::getID() {
+	return _ID;
+}
+
+void Enemigo::setID(int ID) {
+	this->_ID = ID;
+}
+
 Enemigo::~Enemigo() {
 
 }

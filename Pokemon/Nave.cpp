@@ -42,10 +42,10 @@ void Nave::processInput(float deltaTime) {
 void Nave::mover(float x, float y, float deltaTime) {
 
 	if (_sprite.getPosition().x > 10 && x == -1)
-		this->_sprite.move(x * deltaTime * (LIMITE_DERECHA) / 1.8, 0);
+		this->_sprite.move(x * deltaTime * (LIMITE_DERECHA) / 2, 0);
 
 	if (_sprite.getPosition().x < LIMITE_DERECHA - 112 - 10 && x == 1)
-		this->_sprite.move(x * deltaTime * (LIMITE_DERECHA) / 1.8, 0);
+		this->_sprite.move(x * deltaTime * (LIMITE_DERECHA) / 2, 0);
 }
 
 
