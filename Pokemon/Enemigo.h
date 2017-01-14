@@ -14,6 +14,8 @@ public:
 	int getID();
 	void setID(int ID);
 
+	void mover(int x, int y);
+
 private:
 	bool _alive = true;
 	int _ID;

@@ -19,7 +19,7 @@ public:
 
 private:
 
-	const float TIEMPO_DISPARO = 0.4f;
+	const float TIEMPO_DISPARO = 0.5f;
 
 	bool alive = true;
 

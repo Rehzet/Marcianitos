@@ -58,6 +58,10 @@ public:
 	void setSprite(sf::Sprite sprite);
 
 	/*
+	Se cambia el tamaño del sprite utilizando la función setScale(float x, float y) de sf::Sprite. */
+	void setSize(float width, float height);
+
+	/*
 	Método que se utiliza para escribir toda la lógica de la entidad.
 	- deltaTime: tiempo que transcurre entre cada iteración del bucle principal del juego*/
 	virtual void act(float deltaTime);
@@ -84,6 +88,9 @@ protected:
 
 	/* Sprite de la entidad. Es la parte visible que se va a mostrar por pantalla.*/
 	sf::Sprite _sprite;
+
+	/* Guarda el tamaño del sprite. */
+	sf::Vector2f _size;
 
 };
 

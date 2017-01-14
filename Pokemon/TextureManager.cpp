@@ -3,8 +3,8 @@
 // Constructor. No se usa
 TextureManager::TextureManager() {}
 
-std::map<char*, sf::Texture*> TextureManager::textures;
-std::vector<char*> TextureManager::order;
+std::map<std::string, sf::Texture*> TextureManager::textures;
+std::vector<std::string> TextureManager::order;
 
 
 // Devuelve la longitud del array de texturas
@@ -13,7 +13,7 @@ int TextureManager::getLength() {
 }
 
 
-sf::Texture *TextureManager::getTexture(char* nombre) {
+sf::Texture *TextureManager::getTexture(std::string nombre) {
 
 	// Comprobamos si la textura se había cargado previamente.
 	if (textures.find(nombre) != textures.end())
@@ -29,7 +29,7 @@ sf::Texture *TextureManager::getTexture(int index) {
 }
 
 // Asigna un nombre y una ruta a una textura.
-sf::Texture *TextureManager::loadTexture(char* nombre, char* ruta) {
+sf::Texture *TextureManager::loadTexture(std::string nombre, std::string ruta) {
 
 	// Si no se ha creado todavía, se hace ahora.
 	sf::Texture *texture = new sf::Texture;
@@ -52,7 +52,7 @@ TextureManager::~TextureManager() {
 
 	// Elimina todas las texturas que se han utilizado.
 	sf::Texture *texture;
-	std::map<char*, sf::Texture*>::iterator it = textures.begin();
+	std::map<std::string, sf::Texture*>::iterator it = textures.begin();
 	while (it != textures.end()) {
 		texture = it->second;
 		delete texture;

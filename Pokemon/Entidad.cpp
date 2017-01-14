@@ -1,7 +1,8 @@
 #include "Entidad.h"
 
 Entidad::Entidad() {
-
+	_size.x = 1;
+	_size.y = 1;
 }
 
 
@@ -61,6 +62,7 @@ void Entidad::setPosition(float x, float y) {
 
 void Entidad::setTexture(sf::Texture &texture){
 	_texture = texture;
+	_texture.setSmooth(true);
 	_sprite.setTexture(_texture);
 }
 
@@ -68,3 +70,8 @@ void Entidad::setSprite(sf::Sprite sprite) {
 	_sprite = sprite;
 }
 
+void Entidad::setSize(float width, float height) {
+	_sprite.setScale(width, height);
+	_size.x = _sprite.getScale().x;
+	_size.y = _sprite.getScale().y;
+}

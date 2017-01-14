@@ -24,6 +24,10 @@ void Enemigo::setID(int ID) {
 	this->_ID = ID;
 }
 
+void Enemigo::mover(int x, int y) {
+	this->_sprite.move(x, y);
+}
+
 Enemigo::~Enemigo() {
 
 }

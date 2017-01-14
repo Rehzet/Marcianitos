@@ -9,6 +9,7 @@ Nave::Nave(sf::VideoMode resolucion) {
 	sonidoDisparo.setBuffer(soundBuffer);
 
 	setRightLimit(resolucion.width);
+
 }
 
 void Nave::draw(sf::RenderWindow &Window) {
