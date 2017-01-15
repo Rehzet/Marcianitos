@@ -27,6 +27,7 @@ void inputProcessor();
 
  sf::Font fuenteKenVector_Future;
  sf::Text txtPuntos;
+ sf::Text txtPausa;
  int puntos = 0;
 
  sf::Texture tempTextur;
@@ -132,7 +133,7 @@ void inicializar() {
 	}
 
 
-	/* ----- TIPO DE LETRA ----- */
+	/* ----- TEXTOS ----- */
 	if (!fuenteKenVector_Future.loadFromFile("res/Bonus/kenvector_future.ttf"))
 		std::cout << "No se ha podido cargar la fuente" << std::endl;
 
@@ -140,6 +141,11 @@ void inicializar() {
 	txtPuntos.setString("Puntuación: " + std::to_string(puntos));
 	txtPuntos.setCharacterSize(20);
 	txtPuntos.setPosition(10, 10);
+
+	txtPausa.setFont(fuenteKenVector_Future);
+	txtPausa.setString("PAUSA");
+	txtPausa.setCharacterSize(60);
+	txtPausa.setPosition(GameWindow.getSize().x / 2 - 121, GameWindow.getSize().y / 2 - 20);
 
 }
 
@@ -251,10 +257,11 @@ void gameLoop() {int sentido = 1;  while (GameWindow.isOpen()) { // Bucle princi
 		}
 	}
 
-	GameWindow.clear(sf::Color::Black);
+	GameWindow.clear();
 
 	GameWindow.draw(fondo);
-	GameWindow.draw(txtPuntos);
+
+	GameWindow.draw(txtPuntos);	
 
 	nave->draw(GameWindow);
 
@@ -282,6 +289,9 @@ void gameLoop() {int sentido = 1;  while (GameWindow.isOpen()) { // Bucle princi
 			}
 		}
 	}
+
+	if (pausa)
+		GameWindow.draw(txtPausa);
 
 	GameWindow.display();
 }}
