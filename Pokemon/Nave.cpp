@@ -51,8 +51,8 @@ void Nave::mover(float x, float y, float deltaTime) {
 
 
 void Nave::disparar() {
-	Disparo *disp = new Disparo();;
-	disp->setPosition(this->_sprite.getPosition().x + 51, this->_sprite.getPosition().y - 55);
+	Disparo *disp = new Disparo();
+	disp->setPosition(this->_sprite.getPosition().x + 51, this->_sprite.getPosition().y-20);
 	vectorDisparos.push_back(*disp);
 	sonidoDisparo.play();
 }

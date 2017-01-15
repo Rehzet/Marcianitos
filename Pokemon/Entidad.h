@@ -80,9 +80,6 @@ protected:
 	/* Alto de la entidad. Tiene valor NULL por defecto.*/
 	int _height = NULL;
 
-	/* Vector de 2 componentes flotantes que almacena la posición de la entidad.*/
-	sf::Vector2f _position;
-
 	/* Textura de la entidad*/
 	sf::Texture _texture;
 

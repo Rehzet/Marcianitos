@@ -1,11 +1,23 @@
 #include "Disparo.h"
 
-Disparo::Disparo(){
-	_sprite.setTexture(*TextureManager::getTexture("disparo"));
+Disparo::Disparo(float angle){
+	if(!angle)
+		_sprite.setTexture(*TextureManager::getTexture("disparoAzul"));
+	else
+		_sprite.setTexture(*TextureManager::getTexture("disparoRojo"));
+
+	_sprite.setRotation(angle);
 }
 
 void Disparo::mover(float deltaTime) {
-	_sprite.move(0, -1200 * deltaTime);
+	float sentido;
+
+	if (!this->getSprite().getRotation())
+		sentido = -1;
+	else
+		sentido = 1;
+
+	_sprite.move(0, 1200 * deltaTime * sentido);
 }
 
 void Disparo::draw(sf::RenderWindow &window) {

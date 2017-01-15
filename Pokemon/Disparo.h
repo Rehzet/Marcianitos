@@ -10,7 +10,8 @@
 class Disparo : public Entidad{
 public:
 
-	Disparo();
+	/* Se crea un disparo con el parámetro opcional del ángulo. Si no se pone, será 0 por defecto. */
+	Disparo(float angle = 0);
 	~Disparo();
 
 	void draw(sf::RenderWindow &Window);

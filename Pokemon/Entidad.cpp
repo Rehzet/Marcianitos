@@ -27,7 +27,7 @@ int Entidad::getHeight() {
 }
 
 sf::Vector2f Entidad::getPosition() {
-	return _position;
+	return _sprite.getPosition();
 }
 
 sf::Texture Entidad::getTexture() {

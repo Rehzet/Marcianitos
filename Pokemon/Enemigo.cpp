@@ -28,6 +28,21 @@ void Enemigo::mover(int x, int y) {
 	this->_sprite.move(x, y);
 }
 
+void Enemigo::setSound(sf::Sound &sonido) {
+	_sonidoExplosion = sonido;
+}
+
+void Enemigo::explosion() {
+	_sonidoExplosion.play();
+}
+
+void Enemigo::disparar() {
+	Disparo *disp = new Disparo(180);
+	disp->setPosition(this->_sprite.getPosition().x + 51, this->_sprite.getPosition().y + 84 + 20);
+	vectorDisparos.push_back(*disp);
+	//sonidoDisparo.play();
+}
+
 Enemigo::~Enemigo() {
 
 }
