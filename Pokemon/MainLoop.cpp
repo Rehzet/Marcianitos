@@ -9,15 +9,21 @@
 #include <string>
 #include <stdlib.h>
 #include <time.h>
+#include <Windows.h>
+#include <cmath>
 
 void inicializar();
 void gameLoop();
 void inputProcessor();
 
 void generarMarcianos(float nivel);
+void recolocarMarcianos(float nivel);
 
- sf::VideoMode resolucion = _1600x900;
- sf::Uint32 modoVentana = sf::Style::Default;
+ // sf::VideoMode resolucion = _1600x900;
+sf::VideoMode resolucion;
+
+
+ sf::Uint32 modoVentana = sf::Style::None;
 
  sf::RenderWindow GameWindow;
  sf::Clock Reloj;
@@ -28,9 +34,12 @@ void generarMarcianos(float nivel);
  sf::Font fuenteKenVector_Future;
  sf::Text txtPuntos;
  sf::Text txtPausa;
+ sf::Text txtVidas;
+ sf::Text txtNivel;
 
  int puntos = 0;
  int nivel = 1;
+
  bool cambiarNivel = false;
 
  sf::Texture tempTextur;
@@ -50,11 +59,13 @@ void generarMarcianos(float nivel);
 	 int numNaves;
 	 sf::Sound sonidoExplosion;
 	 sf::Sound sonidoDisparo;
+	 int sentido;
  } Enemigos;
 
  Enemigos enemigos;
 
- Nave *nave = new Nave(resolucion);
+ Nave *nave;
+ sf::Sprite spriteVidas;
 
  sf::Event Event;
 
@@ -76,9 +87,14 @@ void inicializar() {
 	settings.antialiasingLevel = 8;
 
 	/* ----- VENTANA ----- */
+	resolucion.width = GetSystemMetrics(SM_CXSCREEN);
+	resolucion.height = GetSystemMetrics(SM_CYSCREEN);
+	std::cout << resolucion.width << "x" << resolucion.height << std::endl;
+
 	GameWindow.create(resolucion, "Marcianitos", modoVentana, settings);
 	GameWindow.setVerticalSyncEnabled(true);
 	GameWindow.setPosition(sf::Vector2i(0, 0));
+	GameWindow.setMouseCursorVisible(false);
 
 	/* ----- FONDO ----- */
 	TextureManager::loadTexture("fondo_azul", "res/Backgrounds/blue.png");
@@ -90,12 +106,18 @@ void inicializar() {
 	fondo.setTextureRect({ 0, 0, (int)GameWindow.getSize().x * 2, (int)GameWindow.getSize().y * 2 });
 
 	/* ----- NAVE ----- */
+	nave = new Nave(resolucion);
 	TextureManager::loadTexture("nave", "res/PNG/playerShip2_red.png");
-	nave->setTexture(*TextureManager::getTexture("nave"));
+	nave->figura.setTexture(TextureManager::getTexture("nave"));
 	nave->setRightLimit(resolucion.width);
 	nave->setWidth(112.0f);
 	nave->setHeight(75.0f);
-	nave->setSize(GameWindow.getSize().x / 1920.0f, GameWindow.getSize().y / 1080.0f);
+	nave->figura.setScale(GameWindow.getSize().x / 1920.0f, GameWindow.getSize().y / 1080.0f);
+
+	/* ----- VIDAS ----- */
+	TextureManager::loadTexture("vida", "res/PNG/UI/playerLife2_red.png");
+	spriteVidas.setTexture(*TextureManager::getTexture("vida"));
+	spriteVidas.setPosition(40, GameWindow.getSize().y - txtVidas.getCharacterSize() - 5);
 
 	/* ----- DISPAROS ----- */
 	TextureManager::loadTexture("disparoAzul", "res/PNG/Lasers/laserBlue07.png");
@@ -133,14 +155,25 @@ void inicializar() {
 	txtPausa.setCharacterSize(60);
 	txtPausa.setPosition((float)GameWindow.getSize().x / 2.0f - 121.0f, (float)GameWindow.getSize().y / 2.0f - 20.0f);
 
+	txtVidas.setFont(fuenteKenVector_Future);
+	txtVidas.setString(std::to_string(nave->getVidas()));
+	txtVidas.setCharacterSize(30);
+	txtVidas.setPosition(10, GameWindow.getSize().y - txtVidas.getCharacterSize() - 10);
+
+	txtNivel.setFont(fuenteKenVector_Future);
+	txtNivel.setCharacterSize(60);
+	txtNivel.setPosition((float)GameWindow.getSize().x / 2.0f - 121.0f, (float)GameWindow.getSize().y / 2.0f - 20.0f);
+
 }
 
 
 
 bool flag = true;
-float tiempoX;
+float tiempoX, parpadeo = 0.0f;
+bool alcanzado = false;
 
-void gameLoop() {int sentido = 1;  while (GameWindow.isOpen()) { // Bucle principal del juego
+
+void gameLoop() { while (GameWindow.isOpen()) { // Bucle principal del juego
 
 	deltaTime = Reloj.restart();
 	inputProcessor();
@@ -148,23 +181,27 @@ void gameLoop() {int sentido = 1;  while (GameWindow.isOpen()) { // Bucle princi
 	if (cambiarNivel) {
 		if (tiempoX < 2.0f) {
 			tiempoX += deltaTime.asSeconds();
-			std::cout << tiempoX << std::endl;
+			std::cout << tiempoX << std::endl;			
 		}
-		else {
+		else {		
 			nivel++;
-			generarMarcianos(nivel);
+			generarMarcianos((float)nivel);
 			cambiarNivel = false;
 		}
 
 	}
+	else if(!alcanzado){
+		tiempoX = 0;
+	}
 
-	if (!pausa && !cambiarNivel) {
+	if (!pausa && !cambiarNivel && !alcanzado && nave->isAlive()) {
 
 		nave->processInput(deltaTime.asSeconds());
 
 		/* Se mueven todos los disparos generados por la nave del jugador. */
 		for (int i = 0; i < (int)nave->vectorDisparos.size(); i++)
-			nave->vectorDisparos[i].mover(deltaTime.asSeconds());
+			if(nave->vectorDisparos[i].isAlive())
+				nave->vectorDisparos[i].mover(deltaTime.asSeconds());
 
 
 		/* Todo el código de movimiento y colisiones de los enemigos. Se ejecuta mientras quede al menos una nave sin destruir. */
@@ -202,18 +239,20 @@ void gameLoop() {int sentido = 1;  while (GameWindow.isOpen()) { // Bucle princi
 			/* Se cambia el sentido de las naves enemigas dependiendo de la posición de las naves que están en los límites. */
 			for (int k = 0; k < enemigos.FILAS; k++) {
 
-				if (sentido==1 && enemigos.enemigos[k][enemigos.limDcha].isAlive() && enemigos.enemigos[k][enemigos.limDcha].getPosition().x + enemigos.enemigos[k][enemigos.limDcha].getWidth() + 20 >= GameWindow.getSize().x) {
-					sentido = -1;
+				if (enemigos.sentido==1 && enemigos.enemigos[k][enemigos.limDcha].isAlive() && enemigos.enemigos[k][enemigos.limDcha].getPosition().x + enemigos.enemigos[k][enemigos.limDcha].getWidth() + 20 >= GameWindow.getSize().x) {
+					enemigos.sentido = -1;
 					for (int j = 0; j < enemigos.FILAS; j++) {
 						for (int i = 0; i < enemigos.COLUMNAS; i++)
-							enemigos.enemigos[j][i].mover(0, GameWindow.getSize().y / 35.0f);
+							if (enemigos.enemigos[j][i].isAlive())
+								enemigos.enemigos[j][i].mover(0, GameWindow.getSize().y / 35.0f);
 					}
 				}
-				else if (sentido == -1 && enemigos.enemigos[k][enemigos.limIzda].isAlive() && enemigos.enemigos[k][enemigos.limIzda].getPosition().x <= 20) {
-					sentido = 1;
+				else if (enemigos.sentido == -1 && enemigos.enemigos[k][enemigos.limIzda].isAlive() && enemigos.enemigos[k][enemigos.limIzda].getPosition().x <= 20) {
+					enemigos.sentido = 1;
 					for (int j = 0; j < enemigos.FILAS; j++) {
 						for (int i = 0; i < enemigos.COLUMNAS; i++)
-							enemigos.enemigos[j][i].mover(0, GameWindow.getSize().y / 35.0f);
+							if (enemigos.enemigos[j][i].isAlive())
+								enemigos.enemigos[j][i].mover(0, GameWindow.getSize().y / 35.0f);
 					}
 				}
 			}
@@ -221,7 +260,8 @@ void gameLoop() {int sentido = 1;  while (GameWindow.isOpen()) { // Bucle princi
 			/* Se mueve todo el conjunto de naves enemigas. */
 			for (int j = 0; j < enemigos.FILAS; j++) {
 				for (int i = 0; i < enemigos.COLUMNAS; i++) {
-					enemigos.enemigos[j][i].mover(sentido * enemigos.velocidad * deltaTime.asSeconds(), 0);
+					if(enemigos.enemigos[j][i].isAlive())
+						enemigos.enemigos[j][i].mover(enemigos.sentido * enemigos.velocidad * deltaTime.asSeconds(), 0.0f);
 				}
 			}
 
@@ -229,14 +269,14 @@ void gameLoop() {int sentido = 1;  while (GameWindow.isOpen()) { // Bucle princi
 			for (int j = 0; j < enemigos.FILAS; j++) {
 				for (int i = 0; i < enemigos.COLUMNAS; i++) {
 					for (int k = 0; k < (int)nave->vectorDisparos.size(); k++) {
-						if (nave->vectorDisparos[k].getSprite().getGlobalBounds().intersects(enemigos.enemigos[j][i].getSprite().getGlobalBounds())) {
+						if (nave->vectorDisparos[k].isAlive() && nave->vectorDisparos[k].getSprite().getGlobalBounds().intersects(enemigos.enemigos[j][i].getSprite().getGlobalBounds())) {
 							//enemigos.enemigos[j][i].explosion();
 							enemigos.enemigos[j][i].setAlive(false);
-							enemigos.enemigos[j][i].setPosition(-1000, -1000);
+							enemigos.enemigos[j][i].setPosition(-5000.0f, -1000.0f);
 							nave->vectorDisparos[k].setAlive(false);
-							nave->vectorDisparos[k].setPosition(-2000, -1000);
+							nave->vectorDisparos[k].setPosition(-2000.0f, -1000.0f);
 							//nave->tiempo = 0.0f;
-							enemigos.velocidad *= 1.05f;
+							enemigos.velocidad += 4*log(enemigos.velocidad); 
 							enemigos.numNaves--;
 							txtPuntos.setString("Puntuación: " + std::to_string(puntos += 100));
 
@@ -250,9 +290,11 @@ void gameLoop() {int sentido = 1;  while (GameWindow.isOpen()) { // Bucle princi
 			for (int j = 0; j < enemigos.FILAS; j++) {
 				for (int i = 0; i < enemigos.COLUMNAS; i++) {
 					for (int k = 0; k < (int)enemigos.enemigos[j][i].vectorDisparos.size(); k++) {
-						if (enemigos.enemigos[j][i].vectorDisparos[k].getSprite().getGlobalBounds().intersects(nave->getSprite().getGlobalBounds())) {
-							nave->setAlive(false);
-							std::cout << "Has perdido" << std::endl;
+						if (enemigos.enemigos[j][i].vectorDisparos[k].isAlive() && enemigos.enemigos[j][i].vectorDisparos[k].getSprite().getGlobalBounds().intersects(nave->figura.getGlobalBounds())) {
+							nave->setVidas(nave->getVidas() - 1);
+							enemigos.enemigos[j][i].vectorDisparos[k].setAlive(false);
+							enemigos.enemigos[j][i].vectorDisparos[k].setPosition(-2000.0f, -1000.0f);
+							alcanzado = true;
 						}
 					}
 				}
@@ -261,11 +303,10 @@ void gameLoop() {int sentido = 1;  while (GameWindow.isOpen()) { // Bucle princi
 			/* Comprobar colisiones de las naves enemigas con la nave del jugador. */
 			for (int j = 0; j < enemigos.FILAS; j++) {
 				for (int i = 0; i < enemigos.COLUMNAS; i++) {
-					if (enemigos.enemigos[j][i].getSprite().getGlobalBounds().intersects(nave->getSprite().getGlobalBounds())) {
-						nave->setAlive(false);
-						std::cout << "Has perdido" << std::endl; 
-					}
-						
+					if (enemigos.enemigos[j][i].getSprite().getGlobalBounds().intersects(nave->figura.getGlobalBounds())) {
+						nave->setVidas(nave->getVidas() - 1);
+						alcanzado = true;
+					}						
 				}
 			}
 
@@ -274,7 +315,7 @@ void gameLoop() {int sentido = 1;  while (GameWindow.isOpen()) { // Bucle princi
 				for (int i = 0; i < enemigos.COLUMNAS; i++) {
 					if (enemigos.enemigos[j][i].isAlive()) {
 						if (j < enemigos.FILAS - 1 && !enemigos.enemigos[j + 1][i].isAlive()) {
-							if (rand() % 1001 >= 999) {
+							if (rand() % 1001 >= 998) {
 								enemigos.enemigos[j][i].disparar();
 								enemigos.sonidoDisparo.play();
 							}
@@ -289,22 +330,37 @@ void gameLoop() {int sentido = 1;  while (GameWindow.isOpen()) { // Bucle princi
 				}
 			}
 		}
-
-		if (enemigos.numNaves == 0) {
+		if (enemigos.numNaves == 0) 
 			cambiarNivel = true;
-			tiempoX = 0;
-		}
+
+		if (nave->getVidas() <= 0)
+			nave->setAlive(false);
 	}
 
-	
-	
 	GameWindow.clear();
-
 	GameWindow.draw(fondo);
 
-	GameWindow.draw(txtPuntos);	
-
-	nave->draw(GameWindow);
+	/* Parpadeo de la nave del jugador cuando le alcanza un enemigo. */
+	if(!alcanzado)
+		nave->draw(GameWindow);
+	else {
+		if (tiempoX < 2.0f) {
+			tiempoX += deltaTime.asSeconds();
+			parpadeo += deltaTime.asSeconds();
+			if (parpadeo > 0.7f) {
+				parpadeo = 0.0f;
+			}
+			else if(parpadeo <=0.35f){
+				nave->draw(GameWindow);
+			}				
+		}
+		else {
+			alcanzado = false;
+			parpadeo = 0.0f;
+			recolocarMarcianos(nivel);
+		}
+		
+	}
 
 	/* Dibujar los disparos de la nave del jugador. */
 	for (int i = 0; i < (int)nave->vectorDisparos.size(); i++)
@@ -326,14 +382,29 @@ void gameLoop() {int sentido = 1;  while (GameWindow.isOpen()) { // Bucle princi
 		for (int j = 0; j < enemigos.FILAS; j++) {
 			for (int i = 0; i < enemigos.COLUMNAS; i++) {
 				for (int k = 0; k < (int)enemigos.enemigos[j][i].vectorDisparos.size(); k++)
-					enemigos.enemigos[j][i].vectorDisparos[k].draw(GameWindow);
+					if(enemigos.enemigos[j][i].vectorDisparos[k].isAlive())
+						enemigos.enemigos[j][i].vectorDisparos[k].draw(GameWindow);
 			}
 		}
+
 	}
 
 	/* Mostrar el texto "PAUSA" si la partida está pausada. */
 	if (pausa)
 		GameWindow.draw(txtPausa);
+
+	if (cambiarNivel) {
+		txtNivel.setString("Nivel " + std::to_string(nivel+1));
+		GameWindow.draw(txtNivel);
+	}
+
+	/* Dibujar las vidas. */
+	txtVidas.setString(std::to_string(nave->getVidas()));
+	GameWindow.draw(txtVidas);
+	GameWindow.draw(spriteVidas);
+
+	/* Mostrar texto de puntuación. */
+	GameWindow.draw(txtPuntos);
 
 	GameWindow.display();
 }}
@@ -348,11 +419,13 @@ void inputProcessor() {	static bool moverDcha = false;	static bool moverIzda = f
 	switch (Event.type) {
 
 	case sf::Event::Closed:
-		GameWindow.close();
+		GameWindow.setMouseCursorVisible(true);
+		GameWindow.close();		
 		break;
 	case  sf::Event::KeyPressed:
 		switch (Event.key.code) {
 		case sf::Keyboard::Escape:
+			GameWindow.setMouseCursorVisible(true);
 			GameWindow.close();
 			break;
 		}
@@ -368,8 +441,8 @@ void inputProcessor() {	static bool moverDcha = false;	static bool moverIzda = f
 		break;
 	case sf::Event::Resized:
 
-		nave->setSize(GameWindow.getSize().x / 1920.0f, GameWindow.getSize().y / 1080.0f);
-		nave->setPosition((float)GameWindow.getSize().x / 2 - 56, (float)GameWindow.getSize().y - 100);
+		nave->figura.setScale(GameWindow.getSize().x / 1920.0f, GameWindow.getSize().y / 1080.0f);
+		nave->figura.setPosition((float)GameWindow.getSize().x / 2 - 56, (float)GameWindow.getSize().y - 100);
 		nave->setRightLimit(GameWindow.getSize().x);
 
 		for (int j = 0; j < 3; j++) 
@@ -416,10 +489,11 @@ void inputProcessor() {	static bool moverDcha = false;	static bool moverIzda = f
 
 void generarMarcianos(float nivel) {
 	/* ----- ENEMIGOS ----- */
-	float x, y = GameWindow.getSize().y / 1080.0f * 60.0f * nivel * 0.1 + 10;
+	float x, y = GameWindow.getSize().y / 1080.0f * 60.0f * nivel * 0.1f + 10.0f;
 	static int id = 0;
 	int num = 5;
 
+	enemigos.sentido = 1;
 	enemigos.velocidad = 250.0f;
 	enemigos.limDcha = enemigos.COLUMNAS - 1;
 	enemigos.limIzda = 0;
@@ -455,25 +529,43 @@ void generarMarcianos(float nivel) {
 				enemigo->setSound(enemigos.sonidoExplosion);
 				enemigos.enemigos[j].push_back(*enemigo);
 				std::cout << "ID: " << enemigo->getID() << std::endl;
-				x += 110.0f;
+				x += GameWindow.getSize().x / 1920.0f * 130.0f;
 			}
-			y += 90.0f;
+			y += GameWindow.getSize().y / 1080.0f * 100.0f;
 			num--;
 		}
 	}
 	else {
-		nave->vectorDisparos.clear();
 		for (int j = 0; j < enemigos.FILAS; j++) {
-			x = GameWindow.getSize().x / 1920.0f * 60.0f;
 			for (int i = 0; i < enemigos.COLUMNAS; i++) {
 				enemigos.enemigos[j][i].setAlive(true);
-				enemigos.enemigos[j][i].setPosition(x, y);
-				x += 110.0f;
 			}
-			y += 90.0f;
 		}
+		recolocarMarcianos(nivel);
 	}
 	
 
 }
 
+void recolocarMarcianos(float nivel) {
+
+	float x, y = GameWindow.getSize().y / 1080.0f * 60.0f * nivel * 0.1f + 10.0f;
+
+	nave->vectorDisparos.clear();
+
+	for (int j = 0; j < enemigos.FILAS; j++) {
+		for (int i = 0; i < enemigos.COLUMNAS; i++) {
+			enemigos.enemigos[j][i].vectorDisparos.clear();
+		}
+	}
+
+	for (int j = 0; j < enemigos.FILAS; j++) {
+		x = GameWindow.getSize().x / 1920.0f * 60.0f;
+		for (int i = 0; i < enemigos.COLUMNAS; i++) {
+			if(enemigos.enemigos[j][i].isAlive())
+				enemigos.enemigos[j][i].setPosition(x, y);
+			x += GameWindow.getSize().x / 1920.0f * 130.0f;
+		}
+		y += GameWindow.getSize().y / 1080.0f * 100.0f;
+	}
+}

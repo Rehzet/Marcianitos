@@ -16,7 +16,7 @@ public:
 	int getID();
 	void setID(int ID);
 
-	void mover(int x, int y);
+	void mover(float x, float y);
 
 	void setSound(sf::Sound &sonido);
 

@@ -25,14 +25,20 @@ public:
 	bool isAlive();
 	void setAlive(bool alive);
 
-private:
+	void setVidas(int vidas);
+	int getVidas();
 
-	float _tiempoDisparo = 0.3f;
+	sf::ConvexShape figura;
+
+private:																										  
+
+	float _tiempoDisparo = 0.8f;
 
 	bool _alive = true;
 
 	int LIMITE_DERECHA;
 	
+	int _vidas = 3;
 
 	sf::Clock relojDisparo;
 	sf::SoundBuffer soundBuffer;
