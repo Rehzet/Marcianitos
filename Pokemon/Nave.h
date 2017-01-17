@@ -17,14 +17,22 @@ public:
 
 	std::vector<Disparo> vectorDisparos;
 
+	void setTiempoDisparo(float tiempo);
+	float getTiempoDisparo();
+
+	float tiempo = 0.0f;
+
+	bool isAlive();
+	void setAlive(bool alive);
+
 private:
 
-	const float TIEMPO_DISPARO = 0.5f;
+	float _tiempoDisparo = 0.3f;
 
-	bool alive = true;
+	bool _alive = true;
 
 	int LIMITE_DERECHA;
-	float tiempo;
+	
 
 	sf::Clock relojDisparo;
 	sf::SoundBuffer soundBuffer;

@@ -38,7 +38,7 @@ void Enemigo::explosion() {
 
 void Enemigo::disparar() {
 	Disparo *disp = new Disparo(180);
-	disp->setPosition(this->_sprite.getPosition().x + 51, this->_sprite.getPosition().y + 84 + 20);
+	disp->setPosition(this->_sprite.getPosition().x + (_width*this->_sprite.getScale().x) / 2.0f - disp->getWidth()/2, this->_sprite.getPosition().y + this->_height);
 	vectorDisparos.push_back(*disp);
 	//sonidoDisparo.play();
 }

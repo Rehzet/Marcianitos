@@ -7,17 +7,20 @@ Disparo::Disparo(float angle){
 		_sprite.setTexture(*TextureManager::getTexture("disparoRojo"));
 
 	_sprite.setRotation(angle);
+
+	_width = 9.0f;
+	_height = 37.0f;
 }
 
 void Disparo::mover(float deltaTime) {
 	float sentido;
 
 	if (!this->getSprite().getRotation())
-		sentido = -1;
+		sentido = -1.0f;
 	else
-		sentido = 1;
+		sentido = 1.0f;
 
-	_sprite.move(0, 1200 * deltaTime * sentido);
+	_sprite.move(0.0f, VELOCIDAD * deltaTime * sentido);
 }
 
 void Disparo::draw(sf::RenderWindow &window) {

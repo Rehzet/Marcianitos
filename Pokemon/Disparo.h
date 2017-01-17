@@ -22,5 +22,6 @@ public:
 
 private:
 	bool _alive = true;
+	const float VELOCIDAD = 800.0f;
 };
 

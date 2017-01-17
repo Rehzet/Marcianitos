@@ -14,13 +14,13 @@ void inicializar();
 void gameLoop();
 void inputProcessor();
 
+void generarMarcianos(float nivel);
 
  sf::VideoMode resolucion = _1600x900;
  sf::Uint32 modoVentana = sf::Style::Default;
 
  sf::RenderWindow GameWindow;
  sf::Clock Reloj;
- sf::Clock Reloj2;
  sf::Time deltaTime;
 
  sf::Sprite fondo;
@@ -28,7 +28,10 @@ void inputProcessor();
  sf::Font fuenteKenVector_Future;
  sf::Text txtPuntos;
  sf::Text txtPausa;
+
  int puntos = 0;
+ int nivel = 1;
+ bool cambiarNivel = false;
 
  sf::Texture tempTextur;
 
@@ -36,12 +39,15 @@ void inputProcessor();
  sf::SoundBuffer buffer2;
 
 
- typedef struct {
-	 std::vector<Enemigo> enemigos[3];
-	 int limDcha = 5;
+ typedef struct {	
+	 static const int FILAS = 5;
+	 static const int COLUMNAS = 6;
+	 static const int MAX_NAVES = FILAS * COLUMNAS;
+	 std::vector<Enemigo> enemigos[FILAS];	 
+	 int limDcha;
 	 int limIzda = 0;
-	 float velocidad = 300.0f;
-	 int numNaves = 18;
+	 float velocidad;
+	 int numNaves;
 	 sf::Sound sonidoExplosion;
 	 sf::Sound sonidoDisparo;
  } Enemigos;
@@ -60,7 +66,7 @@ int main() {
 }
 
 void inicializar() {
-	srand(time(NULL));
+	std::srand(time(NULL));
 
 	// https://www.youtube.com/watch?v=cGXlkOJ6SzQ Añadir o quitar la consola del proyecto. Debe añadirse el archivo sfml-main-d.lib a los Linkers
 
@@ -87,8 +93,9 @@ void inicializar() {
 	TextureManager::loadTexture("nave", "res/PNG/playerShip2_red.png");
 	nave->setTexture(*TextureManager::getTexture("nave"));
 	nave->setRightLimit(resolucion.width);
-	nave->setWidth(112);
-	nave->setHeight(75);
+	nave->setWidth(112.0f);
+	nave->setHeight(75.0f);
+	nave->setSize(GameWindow.getSize().x / 1920.0f, GameWindow.getSize().y / 1080.0f);
 
 	/* ----- DISPAROS ----- */
 	TextureManager::loadTexture("disparoAzul", "res/PNG/Lasers/laserBlue07.png");
@@ -96,42 +103,21 @@ void inicializar() {
 	
 	/* ----- FUEGOS-NAVE ----- */
 
-	/* ----- ENEMIGOS ----- */
-	float x, y = 60;
-	int id = 0;	
-	int num = 3;
+	/* ----- ENEMIGOS -----	*/
 
-	std::string color = "Red";
-	TextureManager::loadTexture("enemigoRojo1", "res/PNG/Enemies/enemyRed" + std::to_string(1) + ".png");
-	TextureManager::loadTexture("enemigoRojo2", "res/PNG/Enemies/enemyRed" + std::to_string(2) + ".png");
-	TextureManager::loadTexture("enemigoRojo3", "res/PNG/Enemies/enemyRed" + std::to_string(3) + ".png");
-	TextureManager::loadTexture("enemigoRojo4", "res/PNG/Enemies/enemyRed" + std::to_string(4) + ".png");
-	TextureManager::loadTexture("enemigoRojo5", "res/PNG/Enemies/enemyRed" + std::to_string(5) + ".png");
+	for (int i = 1; i <= 5; i++) {
+		TextureManager::loadTexture("enemigoRojo" + std::to_string(i), "res/PNG/Enemies/enemyRed" + std::to_string(i) + ".png");
+	}
 
 	buffer1.loadFromFile("res/Bonus/DeathFlash.wav");
 	enemigos.sonidoExplosion.setBuffer(buffer1);
-	enemigos.sonidoExplosion.setVolume(20.0f);
+	enemigos.sonidoExplosion.setVolume(10.0f);
 
 	buffer2.loadFromFile("res/Bonus/sfx_laser1.ogg");
 	enemigos.sonidoDisparo.setBuffer(buffer2);
 	enemigos.sonidoDisparo.setVolume(22.0f);
 
-	for (int j = 0; j < 3; j++) {
-		x = 100;		
-		for (int i = 0; i < 6; i++) {
-			Enemigo *enemigo = new Enemigo();			
-			enemigo->setTexture(*TextureManager::getTexture("enemigoRojo" + std::to_string(num)));
-			enemigo->setPosition(x, y);
-			enemigo->setID(id++);		
-			enemigo->setSound(enemigos.sonidoExplosion);
-			enemigos.enemigos[j].push_back(*enemigo);
-			std::cout << "ID: " << enemigo->getID() << std::endl;
-			x += 150;
-		}
-		y += 110;
-		num--;
-	}
-
+	generarMarcianos((float)nivel);
 
 	/* ----- TEXTOS ----- */
 	if (!fuenteKenVector_Future.loadFromFile("res/Bonus/kenvector_future.ttf"))
@@ -145,16 +131,35 @@ void inicializar() {
 	txtPausa.setFont(fuenteKenVector_Future);
 	txtPausa.setString("PAUSA");
 	txtPausa.setCharacterSize(60);
-	txtPausa.setPosition(GameWindow.getSize().x / 2 - 121, GameWindow.getSize().y / 2 - 20);
+	txtPausa.setPosition((float)GameWindow.getSize().x / 2.0f - 121.0f, (float)GameWindow.getSize().y / 2.0f - 20.0f);
 
 }
+
+
+
+bool flag = true;
+float tiempoX;
 
 void gameLoop() {int sentido = 1;  while (GameWindow.isOpen()) { // Bucle principal del juego
 
 	deltaTime = Reloj.restart();
 	inputProcessor();
 
-	if (!pausa) {
+	if (cambiarNivel) {
+		if (tiempoX < 2.0f) {
+			tiempoX += deltaTime.asSeconds();
+			std::cout << tiempoX << std::endl;
+		}
+		else {
+			nivel++;
+			generarMarcianos(nivel);
+			cambiarNivel = false;
+		}
+
+	}
+
+	if (!pausa && !cambiarNivel) {
+
 		nave->processInput(deltaTime.asSeconds());
 
 		/* Se mueven todos los disparos generados por la nave del jugador. */
@@ -166,65 +171,72 @@ void gameLoop() {int sentido = 1;  while (GameWindow.isOpen()) { // Bucle princi
 		if (enemigos.numNaves > 0) {
 
 			/* Se mueven todos los disparos generados por las naves enemigas. */
-			for (int j = 0; j < 3; j++) {
-				for (int i = 0; i < 6; i++) {
+			for (int j = 0; j < enemigos.FILAS; j++) {
+				for (int i = 0; i < enemigos.COLUMNAS; i++) {
 					for (int k = 0; k < (int)enemigos.enemigos[j][i].vectorDisparos.size(); k++)
 						enemigos.enemigos[j][i].vectorDisparos[k].mover(deltaTime.asSeconds());
 				}
 			}
-
+				
 			/* Comprobar el límite derecho del conjunto de naves enemigas. */
-			if (!enemigos.enemigos[0][enemigos.limDcha].isAlive() && !enemigos.enemigos[1][enemigos.limDcha].isAlive()
-				&& !enemigos.enemigos[2][enemigos.limDcha].isAlive())
+			for (int i = 0; i < enemigos.FILAS && flag; i++) {
+				if (enemigos.enemigos[i][enemigos.limDcha].isAlive())
+					flag = false;
+			}
+			if (flag)
 				enemigos.limDcha--;
 
+			flag = true;
+
 			/* Comprobar el límite izquierdo del conjunto de naves enemigas. */
-			if (!enemigos.enemigos[0][enemigos.limIzda].isAlive() && !enemigos.enemigos[1][enemigos.limIzda].isAlive()
-				&& !enemigos.enemigos[2][enemigos.limIzda].isAlive())
+			for (int i = 0; i < enemigos.FILAS && flag; i++) {
+				if (enemigos.enemigos[i][enemigos.limIzda].isAlive())
+					flag = false;
+			}
+
+			if (flag)
 				enemigos.limIzda++;
 
+			flag = true;
+
 			/* Se cambia el sentido de las naves enemigas dependiendo de la posición de las naves que están en los límites. */
-			if ((enemigos.enemigos[0][enemigos.limDcha].isAlive() && enemigos.enemigos[0][enemigos.limDcha].getPosition().x + 93 + 20 >= GameWindow.getSize().x)
-				|| (enemigos.enemigos[1][enemigos.limDcha].isAlive() && enemigos.enemigos[1][enemigos.limDcha].getPosition().x + 93 + 20 >= GameWindow.getSize().x)
-				|| (enemigos.enemigos[2][enemigos.limDcha].isAlive() && enemigos.enemigos[2][enemigos.limDcha].getPosition().x + 93 + 20 >= GameWindow.getSize().x))
-			{
-				sentido = -1;
-				for (int j = 0; j < 3; j++) {
-					for (int i = 0; i < 6; i++) {
-						enemigos.enemigos[j][i].mover(0, GameWindow.getSize().y / 30);
+			for (int k = 0; k < enemigos.FILAS; k++) {
+
+				if (sentido==1 && enemigos.enemigos[k][enemigos.limDcha].isAlive() && enemigos.enemigos[k][enemigos.limDcha].getPosition().x + enemigos.enemigos[k][enemigos.limDcha].getWidth() + 20 >= GameWindow.getSize().x) {
+					sentido = -1;
+					for (int j = 0; j < enemigos.FILAS; j++) {
+						for (int i = 0; i < enemigos.COLUMNAS; i++)
+							enemigos.enemigos[j][i].mover(0, GameWindow.getSize().y / 35.0f);
 					}
 				}
-			}
-			else if ((enemigos.enemigos[0][enemigos.limIzda].isAlive() && enemigos.enemigos[0][enemigos.limIzda].getPosition().x <= 20)
-				|| (enemigos.enemigos[1][enemigos.limIzda].isAlive() && enemigos.enemigos[1][enemigos.limIzda].getPosition().x <= 20)
-				|| (enemigos.enemigos[2][enemigos.limIzda].isAlive() && enemigos.enemigos[2][enemigos.limIzda].getPosition().x <= 20))
-			{
-				sentido = 1;
-				for (int j = 0; j < 3; j++) {
-					for (int i = 0; i < 6; i++) {
-						enemigos.enemigos[j][i].mover(0, GameWindow.getSize().y / 30);
+				else if (sentido == -1 && enemigos.enemigos[k][enemigos.limIzda].isAlive() && enemigos.enemigos[k][enemigos.limIzda].getPosition().x <= 20) {
+					sentido = 1;
+					for (int j = 0; j < enemigos.FILAS; j++) {
+						for (int i = 0; i < enemigos.COLUMNAS; i++)
+							enemigos.enemigos[j][i].mover(0, GameWindow.getSize().y / 35.0f);
 					}
 				}
 			}
 
 			/* Se mueve todo el conjunto de naves enemigas. */
-			for (int j = 0; j < 3; j++) {
-				for (int i = 0; i < 6; i++) {
+			for (int j = 0; j < enemigos.FILAS; j++) {
+				for (int i = 0; i < enemigos.COLUMNAS; i++) {
 					enemigos.enemigos[j][i].mover(sentido * enemigos.velocidad * deltaTime.asSeconds(), 0);
 				}
 			}
 
 			/* Comprobación de colisiones de los disparos con todas las naves enemigas. */
-			for (int j = 0; j < 3; j++) {
-				for (int i = 0; i < 6; i++) {
+			for (int j = 0; j < enemigos.FILAS; j++) {
+				for (int i = 0; i < enemigos.COLUMNAS; i++) {
 					for (int k = 0; k < (int)nave->vectorDisparos.size(); k++) {
 						if (nave->vectorDisparos[k].getSprite().getGlobalBounds().intersects(enemigos.enemigos[j][i].getSprite().getGlobalBounds())) {
-							enemigos.enemigos[j][i].explosion();
+							//enemigos.enemigos[j][i].explosion();
 							enemigos.enemigos[j][i].setAlive(false);
 							enemigos.enemigos[j][i].setPosition(-1000, -1000);
 							nave->vectorDisparos[k].setAlive(false);
 							nave->vectorDisparos[k].setPosition(-2000, -1000);
-							enemigos.velocidad *= 1.0785f;
+							//nave->tiempo = 0.0f;
+							enemigos.velocidad *= 1.05f;
 							enemigos.numNaves--;
 							txtPuntos.setString("Puntuación: " + std::to_string(puntos += 100));
 
@@ -235,28 +247,57 @@ void gameLoop() {int sentido = 1;  while (GameWindow.isOpen()) { // Bucle princi
 			}
 
 			/* Comprobación de colisiones de todos los disparos de las naves enemigas con la nave del jugador. */
-			for (int j = 0; j < 3; j++) {
-				for (int i = 0; i < 6; i++) {
+			for (int j = 0; j < enemigos.FILAS; j++) {
+				for (int i = 0; i < enemigos.COLUMNAS; i++) {
 					for (int k = 0; k < (int)enemigos.enemigos[j][i].vectorDisparos.size(); k++) {
 						if (enemigos.enemigos[j][i].vectorDisparos[k].getSprite().getGlobalBounds().intersects(nave->getSprite().getGlobalBounds())) {
+							nave->setAlive(false);
 							std::cout << "Has perdido" << std::endl;
 						}
 					}
 				}
 			}
 
+			/* Comprobar colisiones de las naves enemigas con la nave del jugador. */
+			for (int j = 0; j < enemigos.FILAS; j++) {
+				for (int i = 0; i < enemigos.COLUMNAS; i++) {
+					if (enemigos.enemigos[j][i].getSprite().getGlobalBounds().intersects(nave->getSprite().getGlobalBounds())) {
+						nave->setAlive(false);
+						std::cout << "Has perdido" << std::endl; 
+					}
+						
+				}
+			}
+
 			/* Disparos aleatorios de las naves enemigas. */
-			for (int j = 0; j < 3; j++) {
-				for (int i = 0; i < 6; i++) {
-					if (rand() % 1001 >= 1000) {
-						enemigos.enemigos[j][i].disparar();
-						enemigos.sonidoDisparo.play();
+			for (int j = 0; j < enemigos.FILAS; j++) {
+				for (int i = 0; i < enemigos.COLUMNAS; i++) {
+					if (enemigos.enemigos[j][i].isAlive()) {
+						if (j < enemigos.FILAS - 1 && !enemigos.enemigos[j + 1][i].isAlive()) {
+							if (rand() % 1001 >= 999) {
+								enemigos.enemigos[j][i].disparar();
+								enemigos.sonidoDisparo.play();
+							}
+						}
+						else if (j == enemigos.FILAS - 1) {
+							if (rand() % 1001 >= 999) {
+								enemigos.enemigos[j][i].disparar();
+								enemigos.sonidoDisparo.play();
+							}
+						}
 					}
 				}
 			}
 		}
+
+		if (enemigos.numNaves == 0) {
+			cambiarNivel = true;
+			tiempoX = 0;
+		}
 	}
 
+	
+	
 	GameWindow.clear();
 
 	GameWindow.draw(fondo);
@@ -265,36 +306,41 @@ void gameLoop() {int sentido = 1;  while (GameWindow.isOpen()) { // Bucle princi
 
 	nave->draw(GameWindow);
 
+	/* Dibujar los disparos de la nave del jugador. */
 	for (int i = 0; i < (int)nave->vectorDisparos.size(); i++)
 		if(nave->vectorDisparos[i].isAlive())
 			nave->vectorDisparos[i].draw(GameWindow);
 
 	/* Se dibujan todas las naves enemigas mientras quede alguna sin destruir. */
 	if (enemigos.numNaves > 0) {
-		for (int j = 0; j < 3; j++) {
-			for (int i = 0; i < 6; i++) {
+		for (int j = 0; j < enemigos.FILAS; j++) {
+			for (int i = 0; i < enemigos.COLUMNAS; i++) {
 				if (enemigos.enemigos[j][i].isAlive()) {
 					enemigos.enemigos[j][i].draw(GameWindow);
 					//std::cout << "ID: " << enemigos.enemigos[j][i].getID() << std::endl;
 				}
 			}
-		}
+		}	
 
 		/* Se dibujan los disparos de las naves enemigas. */
-		for (int j = 0; j < 3; j++) {
-			for (int i = 0; i < 6; i++) {
+		for (int j = 0; j < enemigos.FILAS; j++) {
+			for (int i = 0; i < enemigos.COLUMNAS; i++) {
 				for (int k = 0; k < (int)enemigos.enemigos[j][i].vectorDisparos.size(); k++)
-					if (enemigos.enemigos[j][i].isAlive())
-						enemigos.enemigos[j][i].vectorDisparos[k].draw(GameWindow);
+					enemigos.enemigos[j][i].vectorDisparos[k].draw(GameWindow);
 			}
 		}
 	}
 
+	/* Mostrar el texto "PAUSA" si la partida está pausada. */
 	if (pausa)
 		GameWindow.draw(txtPausa);
 
 	GameWindow.display();
 }}
+
+
+
+
 
 void inputProcessor() {	static bool moverDcha = false;	static bool moverIzda = false; while (GameWindow.pollEvent(Event)) {
    
@@ -335,6 +381,7 @@ void inputProcessor() {	static bool moverDcha = false;	static bool moverIzda = f
 		std::cout << GameWindow.getSize().x << ", " << GameWindow.getSize().y << std::endl;
 
 		GameWindow.create(sf::VideoMode(GameWindow.getSize().x, GameWindow.getSize().y, 32), "Marcianitos", modoVentana);
+		GameWindow.setPosition(sf::Vector2i(0, 0));
 		break;
 	}
 
@@ -364,11 +411,69 @@ void inputProcessor() {	static bool moverDcha = false;	static bool moverIzda = f
 	if (moverIzda)
 		nave->mover(-1, 0, deltaTime.asSeconds());
 
-	
-	
-
 }
 
 
+void generarMarcianos(float nivel) {
+	/* ----- ENEMIGOS ----- */
+	float x, y = GameWindow.getSize().y / 1080.0f * 60.0f * nivel * 0.1 + 10;
+	static int id = 0;
+	int num = 5;
 
+	enemigos.velocidad = 250.0f;
+	enemigos.limDcha = enemigos.COLUMNAS - 1;
+	enemigos.limIzda = 0;
+	enemigos.numNaves = enemigos.FILAS * enemigos.COLUMNAS;
+
+	if (nivel == 1) {
+		for (int j = 0; j < enemigos.FILAS; j++) {
+			x = GameWindow.getSize().x / 1920.0f * 60.0f;
+			for (int i = 0; i < enemigos.COLUMNAS; i++) {
+				Enemigo *enemigo = new Enemigo();
+				enemigo->setTexture(*TextureManager::getTexture("enemigoRojo" + std::to_string(num)));
+				enemigo->setSize(GameWindow.getSize().x / 1920.0f, GameWindow.getSize().y / 1080.0f);
+				switch (num) {
+				case 5:
+					enemigo->setWidth(97.0f);
+					break;
+				case 4:
+					enemigo->setWidth(82.0f);
+					break;
+				case 3:
+					enemigo->setWidth(103.0f);
+					break;
+				case 2:
+					enemigo->setWidth(104.0f);
+					break;
+				case 1:
+					enemigo->setWidth(93.0f);
+					break;
+				}
+				enemigo->setHeight(84.0f);
+				enemigo->setPosition(x, y);
+				enemigo->setID(id++);
+				enemigo->setSound(enemigos.sonidoExplosion);
+				enemigos.enemigos[j].push_back(*enemigo);
+				std::cout << "ID: " << enemigo->getID() << std::endl;
+				x += 110.0f;
+			}
+			y += 90.0f;
+			num--;
+		}
+	}
+	else {
+		nave->vectorDisparos.clear();
+		for (int j = 0; j < enemigos.FILAS; j++) {
+			x = GameWindow.getSize().x / 1920.0f * 60.0f;
+			for (int i = 0; i < enemigos.COLUMNAS; i++) {
+				enemigos.enemigos[j][i].setAlive(true);
+				enemigos.enemigos[j][i].setPosition(x, y);
+				x += 110.0f;
+			}
+			y += 90.0f;
+		}
+	}
+	
+
+}
 

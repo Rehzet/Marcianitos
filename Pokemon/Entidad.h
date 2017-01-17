@@ -35,11 +35,11 @@ public:
 
 	/*
 	Se establece el ancho de la entidad con el parámetro width pasado.*/
-	void setWidth(int width);
+	void setWidth(float width);
 
 	/*
 	Se establece el alto de la entidad con el parámetro height pasado.*/
-	void setHeight(int height);
+	void setHeight(float height);
 
 	/*
 	Se cambia la posición de la entidad utilizando un vector de dos componentes flotantes.*/
@@ -75,10 +75,10 @@ public:
 protected:
 
 	/* Ancho de la entidad. Tiene valor NULL por defecto.*/
-	int _width = NULL;
+	float _width = NULL;
 
 	/* Alto de la entidad. Tiene valor NULL por defecto.*/
-	int _height = NULL;
+	float _height = NULL;
 
 	/* Textura de la entidad*/
 	sf::Texture _texture;

@@ -32,7 +32,7 @@ void Nave::processInput(float deltaTime) {
 
 
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) || sf::Joystick::isButtonPressed(0, sf::Joystick::X)) {
-		if (relojDisparo.getElapsedTime().asSeconds() - tiempo > TIEMPO_DISPARO) {
+		if (relojDisparo.getElapsedTime().asSeconds() - tiempo > _tiempoDisparo) {
 			disparar();
 			tiempo = relojDisparo.getElapsedTime().asSeconds();
 		}
@@ -43,22 +43,38 @@ void Nave::processInput(float deltaTime) {
 void Nave::mover(float x, float y, float deltaTime) {
 
 	if (_sprite.getPosition().x > 10 && x == -1)
-		this->_sprite.move(x * deltaTime * (LIMITE_DERECHA) / 2, 0);
+		this->_sprite.move(x * deltaTime * (LIMITE_DERECHA) * 0.3f, 0);
 
 	if (_sprite.getPosition().x < LIMITE_DERECHA - 112 - 10 && x == 1)
-		this->_sprite.move(x * deltaTime * (LIMITE_DERECHA) / 2, 0);
+		this->_sprite.move(x * deltaTime * (LIMITE_DERECHA) * 0.3f, 0);
 }
 
 
 void Nave::disparar() {
 	Disparo *disp = new Disparo();
-	disp->setPosition(this->_sprite.getPosition().x + 51, this->_sprite.getPosition().y-20);
+	disp->setPosition(this->_sprite.getPosition().x + (_width*this->_sprite.getScale().x)/2.0f - disp->getWidth() / 2, this->_sprite.getPosition().y - disp->getHeight() + disp->getHeight()/2);
 	vectorDisparos.push_back(*disp);
 	sonidoDisparo.play();
 }
 
 void Nave::setRightLimit(int width) {
 	LIMITE_DERECHA = width;
+}
+
+void Nave::setTiempoDisparo(float tiempoDisparo) {
+	_tiempoDisparo = tiempoDisparo;
+}
+
+float Nave::getTiempoDisparo() {
+	return _tiempoDisparo;
+}
+
+bool Nave::isAlive(){
+	return this->_alive;
+}
+
+void Nave::setAlive(bool alive) {
+	this->_alive = alive;
 }
 
 Nave::~Nave(){

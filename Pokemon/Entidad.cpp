@@ -38,14 +38,14 @@ sf::Sprite Entidad::getSprite() {
 	return _sprite;
 }
 
-void Entidad::setWidth(int width) {
+void Entidad::setWidth(float width) {
 	if (width > 0)
 		_width = width;
 	else
 		_width = NULL;
 }
 
-void Entidad::setHeight(int height) {
+void Entidad::setHeight(float height) {
 	if (height > 0)
 		_height = height;
 	else
