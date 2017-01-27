@@ -77,7 +77,7 @@ int main() {
 }
 
 void inicializar() {
-	std::srand(time(NULL));
+	std::srand((u_int)time(NULL));
 
 	// https://www.youtube.com/watch?v=cGXlkOJ6SzQ Añadir o quitar la consola del proyecto. Debe añadirse el archivo sfml-main-d.lib a los Linkers
 
@@ -117,7 +117,7 @@ void inicializar() {
 	/* ----- VIDAS ----- */
 	TextureManager::loadTexture("vida", "res/PNG/UI/playerLife2_red.png");
 	spriteVidas.setTexture(*TextureManager::getTexture("vida"));
-	spriteVidas.setPosition(40, GameWindow.getSize().y - txtVidas.getCharacterSize() - 5);
+	spriteVidas.setPosition(40.0f, GameWindow.getSize().y - txtVidas.getCharacterSize() - 5.0f);
 
 	/* ----- DISPAROS ----- */
 	TextureManager::loadTexture("disparoAzul", "res/PNG/Lasers/laserBlue07.png");
@@ -141,6 +141,9 @@ void inicializar() {
 
 	generarMarcianos((float)nivel);
 
+	/* ----- OVNI ----- */
+	TextureManager::loadTexture("ovni", "res/PNG/ufoYellow.png");
+
 	/* ----- TEXTOS ----- */
 	if (!fuenteKenVector_Future.loadFromFile("res/Bonus/kenvector_future.ttf"))
 		std::cout << "No se ha podido cargar la fuente" << std::endl;
@@ -158,7 +161,7 @@ void inicializar() {
 	txtVidas.setFont(fuenteKenVector_Future);
 	txtVidas.setString(std::to_string(nave->getVidas()));
 	txtVidas.setCharacterSize(30);
-	txtVidas.setPosition(10, GameWindow.getSize().y - txtVidas.getCharacterSize() - 10);
+	txtVidas.setPosition(10.0f, GameWindow.getSize().y - txtVidas.getCharacterSize() - 10.0f);
 
 	txtNivel.setFont(fuenteKenVector_Future);
 	txtNivel.setCharacterSize(60);
@@ -315,13 +318,13 @@ void gameLoop() { while (GameWindow.isOpen()) { // Bucle principal del juego
 				for (int i = 0; i < enemigos.COLUMNAS; i++) {
 					if (enemigos.enemigos[j][i].isAlive()) {
 						if (j < enemigos.FILAS - 1 && !enemigos.enemigos[j + 1][i].isAlive()) {
-							if (rand() % 1001 >= 998) {
+							if (rand() % 1001 >= 997) {
 								enemigos.enemigos[j][i].disparar();
 								enemigos.sonidoDisparo.play();
 							}
 						}
 						else if (j == enemigos.FILAS - 1) {
-							if (rand() % 1001 >= 999) {
+							if (rand() % 1001 >= 998) {
 								enemigos.enemigos[j][i].disparar();
 								enemigos.sonidoDisparo.play();
 							}
@@ -357,7 +360,7 @@ void gameLoop() { while (GameWindow.isOpen()) { // Bucle principal del juego
 		else {
 			alcanzado = false;
 			parpadeo = 0.0f;
-			recolocarMarcianos(nivel);
+			recolocarMarcianos((float)nivel);
 		}
 		
 	}
