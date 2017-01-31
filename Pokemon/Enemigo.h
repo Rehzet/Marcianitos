@@ -22,7 +22,7 @@ public:
 
 	void explosion();
 
-	void disparar();
+	bool disparar();
 
 	std::vector<Disparo> vectorDisparos;
 
@@ -30,5 +30,6 @@ private:
 	bool _alive = true;
 	int _ID;
 	sf::Sound _sonidoExplosion;
+	sf::Clock ckDisp;
 };
 

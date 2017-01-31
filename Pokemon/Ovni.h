@@ -1,7 +1,6 @@
 #pragma once
 #include "Entidad.h"
 #include <iostream>
-#include "TextureManager.h"
 
 class Ovni : public Entidad{
 

@@ -6,6 +6,7 @@
 #include "TextureManager.h"
 #include "Entidad.h"
 #include "Enemigo.h"
+#include "Ovni.h"
 #include <string>
 #include <stdlib.h>
 #include <time.h>
@@ -65,6 +66,9 @@ sf::VideoMode resolucion;
  Enemigos enemigos;
 
  Nave *nave;
+ Ovni *ovni;
+
+
  sf::Sprite spriteVidas;
 
  sf::Event Event;
@@ -142,7 +146,10 @@ void inicializar() {
 	generarMarcianos((float)nivel);
 
 	/* ----- OVNI ----- */
-	TextureManager::loadTexture("ovni", "res/PNG/ufoYellow.png");
+	TextureManager::loadTexture("ovni", "res/PNG/ufo.png");
+	ovni = new Ovni;
+	ovni->setTexture(*TextureManager::getTexture("ovni"));
+	ovni->setPosition(100, 50);
 
 	/* ----- TEXTOS ----- */
 	if (!fuenteKenVector_Future.loadFromFile("res/Bonus/kenvector_future.ttf"))
@@ -318,16 +325,12 @@ void gameLoop() { while (GameWindow.isOpen()) { // Bucle principal del juego
 				for (int i = 0; i < enemigos.COLUMNAS; i++) {
 					if (enemigos.enemigos[j][i].isAlive()) {
 						if (j < enemigos.FILAS - 1 && !enemigos.enemigos[j + 1][i].isAlive()) {
-							if (rand() % 1001 >= 997) {
-								enemigos.enemigos[j][i].disparar();
+							if (enemigos.enemigos[j][i].disparar())
 								enemigos.sonidoDisparo.play();
-							}
 						}
 						else if (j == enemigos.FILAS - 1) {
-							if (rand() % 1001 >= 998) {
-								enemigos.enemigos[j][i].disparar();
+							if (enemigos.enemigos[j][i].disparar())
 								enemigos.sonidoDisparo.play();
-							}
 						}
 					}
 				}
@@ -364,6 +367,9 @@ void gameLoop() { while (GameWindow.isOpen()) { // Bucle principal del juego
 		}
 		
 	}
+
+	/* Dibujar OVNI */
+	ovni->draw(GameWindow);
 
 	/* Dibujar los disparos de la nave del jugador. */
 	for (int i = 0; i < (int)nave->vectorDisparos.size(); i++)

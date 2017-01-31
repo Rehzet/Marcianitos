@@ -1,8 +1,7 @@
 #include "Ovni.h"
 
 
-Ovni::Ovni(){
-	setTexture(*TextureManager::getTexture("ovni"));
+Ovni::Ovni(){	
 }
 
 void Ovni::draw(sf::RenderWindow &window) {
